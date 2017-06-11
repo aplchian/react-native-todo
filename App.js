@@ -1,15 +1,25 @@
-import React from 'react';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
+import React from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ListView
+} from 'react-native'
 import { Constants } from 'expo'
+import { Ionicons } from '@expo/vector-icons'
 
-
-const Header = (props) => {
+const Header = props => {
   return (
-    <View>
+    <View style={styles.header}>
+      <TouchableOpacity>
+        <Ionicons name="ios-checkmark-circle" size={32} color="lightblue" />
+      </TouchableOpacity>
       <TextInput
-        placeholder='Hey dude, what do you want to do?'
+        placeholder="Hey dude, what do you want to do?"
         blurOnSubmit={false}
-        returnKeyType='done'
+        returnKeyType="done"
         style={styles.input}
         value={props.value}
         onChangeText={props.onChange}
@@ -20,40 +30,44 @@ const Header = (props) => {
 }
 const Footer = () => <View />
 
-
 export default class App extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props)
+    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
     this.state = {
       value: '',
-      items: []
+      items: [],
+      dataSource: ds.cloneWithRows([])
     }
     this.handleAddItem = this.handleAddItem.bind(this)
   }
 
-  handleAddItem(){
-    const newItems = [...this.state.items, {
-      key: new Date(),
-      text: this.state.value,
-      complete: false
-    }]
+  handleAddItem() {
+    const newItems = [
+      ...this.state.items,
+      {
+        key: new Date(),
+        text: this.state.value,
+        complete: false
+      }
+    ]
     console.log('newItems', newItems)
     this.setState({ items: newItems, value: '' })
   }
   render() {
     return (
       <View style={styles.container}>
-        <Header 
+        <Header
           value={this.state.value}
           onChange={value => this.setState({ value })}
           onAddItem={this.handleAddItem}
         />
-        <View style={styles.content} >
+        <View style={styles.content}>
           <Text>Content Goes Here</Text>
         </View>
         <Footer />
       </View>
-    );
+    )
   }
 }
 
@@ -64,6 +78,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5f5'
   },
   content: { flex: 1 },
-  input: { height: 50, marginLeft: 16}
-
-});
+  input: { height: 50, marginLeft: 16, flex: 1 },
+  header: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'space-around'
+  }
+})
