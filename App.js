@@ -5,15 +5,18 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  ListView
+  ListView,
+  Keyboard,
+  Switch
 } from 'react-native'
 import { Constants } from 'expo'
 import { Ionicons } from '@expo/vector-icons'
+import { map } from 'ramda'
 
 const Header = props => {
   return (
     <View style={styles.header}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={props.onToggleAllComplete}>
         <Ionicons name="ios-checkmark-circle" size={32} color="lightblue" />
       </TouchableOpacity>
       <TextInput
@@ -30,6 +33,30 @@ const Header = props => {
 }
 const Footer = () => <View />
 
+const Row = ({ text, complete }) => {
+  return (
+    <View style={rstyles.container}>
+      <Switch value={complete} />
+      <View style={rstyles.textWrap}>
+        <Text style={[rstyles.text, complete && rstyles.complete ]}>{text}</Text>
+      </View>
+    </View>
+  )
+}
+
+const rstyles = StyleSheet.create({
+  container: {
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between'
+  },
+  text: { fontSize: 24, color: '#4d4d4d' },
+  complete: { textDecorationLine: 'line-through' },
+  textWrap: { flex: 1, marginHorizontal: 10 }
+})
+
+
 export default class App extends React.Component {
   constructor(props) {
     super(props)
@@ -37,9 +64,27 @@ export default class App extends React.Component {
     this.state = {
       value: '',
       items: [],
-      dataSource: ds.cloneWithRows([])
+      dataSource: ds.cloneWithRows([]),
+      allComplete: false
     }
     this.handleAddItem = this.handleAddItem.bind(this)
+    this.setSource = this.setSource.bind(this)
+    this.handleToggleAllComplete = this.handleToggleAllComplete.bind(this)
+  }
+
+  handleToggleAllComplete(){
+    console.log('toggle')
+    const complete = !this.state.allComplete
+    const newItems = map((item) => ({...item, complete}), this.state.items)
+    this.setSource(newItems, newItems, {allComplete: complete})
+  }
+
+  setSource(items, itemsDataSource, otherState={}){
+    this.setState({
+      items,
+      dataSource: this.state.dataSource.cloneWithRows(itemsDataSource),
+      ...otherState
+    })
   }
 
   handleAddItem() {
@@ -51,19 +96,27 @@ export default class App extends React.Component {
         complete: false
       }
     ]
-    console.log('newItems', newItems)
-    this.setState({ items: newItems, value: '' })
+    this.setSource(newItems, newItems, { value: '' })
   }
   render() {
+    console.log('state', this.state)
     return (
       <View style={styles.container}>
         <Header
           value={this.state.value}
           onChange={value => this.setState({ value })}
           onAddItem={this.handleAddItem}
+          onToggleAllComplete={this.handleToggleAllComplete}
         />
         <View style={styles.content}>
-          <Text>Content Goes Here</Text>
+          <ListView 
+            enableEmptySections
+            onScroll={() => Keyboard.dismiss()}
+            dataSource={this.state.dataSource}
+            renderRow={({key, ...value}) => {
+              return <Row key={key} {...value} />
+            }}
+          />
         </View>
         <Footer />
       </View>
